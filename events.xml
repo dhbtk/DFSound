@@ -1,0 +1,47 @@
+<events>
+	<event pattern="^(Spring has arrived|The wet season)">
+		<music>music/For Originz.ogg</music>
+		<stateful/>
+	</event>
+	<event pattern="^(It is now summer\.$|Summer has arrived)">
+		<music>music/Exciting Trailer.ogg</music>
+		<stateful/>
+	</event>
+	<event pattern="^(Autumn has (come\.|arrived)|The dry season)">
+		<music>music/Rains Will Fall.ogg</music>
+		<stateful/>
+	</event>
+	<event pattern="^Winter (is|has)">
+		<music>music/Frost Waltz.ogg</music>
+		<stateful/>
+	</event>
+	<event pattern="^\*\* (Loading Fortress|Starting New Outpost)">
+		<music>music/Heavy Interlude.ogg</music>
+		<stateful/>
+	</event>
+	<event pattern="^\*\*\* STARTING NEW GAME">
+		<music>music/song_title.ogg</music>
+		<stateful/>
+	</event>
+	<event pattern="^An ambush!">
+		<music>music/Clenched Teeth.ogg</music>
+	</event>
+	<event pattern="^A vile force of darkness">
+		<music>music/Clenched Teeth.ogg</music>
+		<music>music/Final Count.ogg</music>
+		<music>music/Faceoff.ogg</music>
+	</event>
+	<event pattern="^It has started raining.">
+		<sfx>sfx/Distant Thunder And Light Rain-SoundBible.com-148277450.ogg</sfx>
+		<sfx>sfx/Lightning Strike Summer Storm-SoundBible.com-1070450923.ogg</sfx>
+	</event>
+	<event pattern="has given birth">
+		<sfx>sfx/Child Scream-SoundBible.com-1951741114.ogg</sfx>
+	</event>
+	<event pattern="^A snow storm has come.">
+		<sfx>sfx/Snowing-SoundBible.com-495580994.ogg</sfx>
+	</event>
+	<event pattern=".+ cancels .+: .+">
+		<sfx>sfx/Drop Metal Thing-SoundBible.com-401640954.ogg</sfx>
+	</event>
+</events>
