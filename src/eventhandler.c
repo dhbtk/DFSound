@@ -8,10 +8,13 @@
 #include "eventhandler.h"
 GList* events = NULL;
 EVENT* current_stateful_event = NULL;
+EVENT* default_event = NULL;
 FILE* gamelog = NULL;
 Mix_Music* music = NULL;
 char* music_path = "music/";
 char* sfx_path = "sfx/";
+int sfx_volume = 128;
+int music_volume = 128;
 
 void event_iterator(gpointer data,gpointer user_data) {
 	EVENT* event = (EVENT*)data;
@@ -30,23 +33,26 @@ void event_iterator(gpointer data,gpointer user_data) {
 			}
 			char* fname = (char*)g_list_nth_data(event->music,g_random_int_range(0,g_list_length(event->music)));
 			music = Mix_LoadMUS(g_strdup_printf("%s%s",music_path,fname));
+			Mix_VolumeMusic(music_volume);
 			Mix_PlayMusic(music,0);
 		}
 		if(event->sfx != NULL) {
 			printf("Playing sfx\n");
 			char* fname = (char*)g_list_nth_data(event->sfx,g_random_int_range(0,g_list_length(event->sfx)));
 			Mix_Chunk* sfx = Mix_LoadWAV(g_strdup_printf("%s%s",sfx_path,fname));
+			//Mix_VolumeChunk(sfx,sfx_volume);
 			Mix_PlayChannel(-1,sfx,0);
 		}
 	}
 }
-void gamelog_iterate() {
+char* gamelog_iterate() {
+	if(gamelog == NULL) return NULL;
 	char* buf = (char*)malloc(sizeof(char)*1024);
+	memset(buf,0,sizeof(char)*1024);
 	if(fgets(buf,1024,gamelog) != NULL) {
 		printf("%s",buf);
 		g_list_foreach(events,&event_iterator,buf);
 	}
-	free(buf);
 	if(!Mix_PlayingMusic() && current_stateful_event != NULL) {
 		if(current_stateful_event->music != NULL) {
 			Mix_FreeMusic(music);
@@ -55,10 +61,20 @@ void gamelog_iterate() {
 			music = Mix_LoadMUS(g_strdup_printf("%s%s",music_path,fname));
 			Mix_PlayMusic(music,0);
 		}
+	} else if(!Mix_PlayingMusic() && default_event != NULL) {
+		if(default_event->music != NULL) {
+			Mix_FreeMusic(music);
+			music = NULL;
+			char* fname = (char*)g_list_nth_data(default_event->music,g_random_int_range(0,g_list_length(default_event->music)));
+			music = Mix_LoadMUS(g_strdup_printf("%s%s",music_path,fname));
+			Mix_PlayMusic(music,0);
+		}
 	}
+	return buf;
 }
 
-void load_events(char* file) {
+int load_events(char* file) {
+	printf("Loading events\n");
 	xmlDocPtr doc;
 	xmlNodePtr root;
 	xmlNodePtr node;
@@ -66,16 +82,19 @@ void load_events(char* file) {
 	doc = xmlParseFile(file);
 	if(doc == NULL) {
 		fprintf(stderr,"Events file could not be parsed. Please verify.\n");
-		exit(EXIT_FAILURE);
+		return 1;
 	}
 	root = xmlDocGetRootElement(doc);
 	if(root == NULL) {
 		fprintf(stderr,"Events file is empty!\n");
-		exit(EXIT_FAILURE);
+		return 2;
 	}
 	for(node = root->xmlChildrenNode;node != NULL;node = node->next) {
 		if(!xmlStrcmp(node->name,(const xmlChar*)"event")) {
 			EVENT* curr_event    = malloc(sizeof(EVENT));
+			if(xmlGetProp(node,"default") != NULL) {
+				default_event = curr_event;
+			}
 			curr_event->pattern  = (char*)xmlGetProp(node,"pattern");
 			curr_event->music    = NULL;
 			curr_event->sfx      = NULL;
@@ -100,9 +119,18 @@ void load_events(char* file) {
 			}
 		}
 	}
+	char* tmp1 = strdup(file);
+	char* path = dirname(tmp1);
+	
+	music_path = g_strdup_printf("%s/music/",path);
+	printf("Music path: %s\n",music_path);
+	sfx_path   = g_strdup_printf("%s/sfx/",path);
+	printf("SFX path: %s\n",sfx_path);
+	return 0;
 }
 
 void load_gamelog(char* path) {
+	printf("Loading game log\n");
 	gamelog = fopen(path,"r");
 	if(gamelog == NULL) {
 		fprintf(stderr,"There was an error opening the game log. Try checking the path.\n");

@@ -21,6 +21,7 @@ def configure(conf):
 	conf.check_cfg(package='gtk+-2.0',uselib_store='GTK',mandatory=1,args='--cflags --libs')
 	conf.check_cfg(path='xml2-config',package = '',uselib_store = 'LIBXML2',mandatory = 1,args = '--cflags --libs')
 	conf.define('VERSION',VERSION)
+	conf.env['VERSION'] = VERSION
 	conf.write_config_header('config.h')
 
 def build(bld):
