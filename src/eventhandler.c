@@ -32,8 +32,11 @@ void event_iterator(gpointer data,gpointer user_data) {
 				music = NULL;
 			}
 			char* fname = (char*)g_list_nth_data(event->music,g_random_int_range(0,g_list_length(event->music)));
-			music = Mix_LoadMUS(g_strdup_printf("%s%s",music_path,fname));
-			Mix_VolumeMusic(music_volume);
+			char* path  = g_strdup_printf("%s%s",music_path,fname);
+			printf("%s\n",path);
+			free(fname);
+			music = Mix_LoadMUS(path);
+			//Mix_VolumeMusic(music_volume);
 			Mix_PlayMusic(music,0);
 		}
 		if(event->sfx != NULL) {

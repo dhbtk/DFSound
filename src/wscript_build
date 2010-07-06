@@ -5,7 +5,7 @@ obj = bld(
 	uselib    = 'GLIB LIBXML2 SDL GTK',
 	target    = 'dfsound',
 	lib       = ['SDL_mixer'],
-	defines   = 'VERSION="'+bld.env['VERSION']+'"',
+	defines   = ['VERSION="'+bld.env['VERSION']+'"','GUI_ENABLED'],
 	linkflags = ['-g'],
 	ccflags   = ['-g']
 )
