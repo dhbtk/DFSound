@@ -1,12 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef GUI_ENABLED
 #include <gtk/gtk.h>
+#endif
 #include "dfsound.h"
 #include "eventhandler.h"
 #include "SDL.h"
 #include "SDL_mixer.h"
-
+#ifdef GUI_ENABLED
 GtkWidget* event_file_chooser;
 GtkWidget* game_log_chooser;
 int destroyed = 0;
@@ -175,3 +177,26 @@ int main(int argc,char** argv) {
 	SDL_Quit();
 	return 0;
 }
+#else
+int main(int argc,char** argv) {
+	if(argc != 3) {
+		fprintf(stderr,"Usage: %s [gamelog.txt] [events.xml]\n",argv[0]);
+		exit(EXIT_FAILURE);
+	}
+	SDL_Init(SDL_INIT_AUDIO);
+	Mix_OpenAudio(44010,AUDIO_S16,2,4096);
+	load_gamelog(argv[1]);
+	int result;
+	if(!(result = load_events(argv[2]))) {
+		while(1) {
+			char* line = gamelog_iterate();
+			if(line != NULL) printf("%s",line);
+			free(line);
+			usleep(10);
+		}
+	} else {
+		exit(EXIT_FAILURE);
+	}
+	return EXIT_SUCCESS;
+}
+#endif
