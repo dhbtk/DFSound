@@ -60,6 +60,7 @@ static void reload_button_pressed(GtkWidget* button,gpointer data) {
 	
 }
 static void loop_func(gpointer data) {
+	if(destroyed) return;
 	GtkWidget* view = g_list_nth_data(gtk_container_get_children(GTK_CONTAINER(data)),0);
 	GtkTextBuffer* buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(view));
 	char* string;
@@ -166,10 +167,10 @@ int main(int argc,char** argv) {
 	gtk_widget_show_all(main_window);
 	
 	while(!destroyed) {
+		loop_func(game_log_scrollwin);
+		usleep(10);
 		while(gtk_events_pending()) {
 			gtk_main_iteration();
-			loop_func(game_log_scrollwin);
-			usleep(10);
 		}
 	}
 	
