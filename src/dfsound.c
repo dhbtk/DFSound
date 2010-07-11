@@ -76,11 +76,13 @@ static void loop_func(gpointer data) {
 		GtkAdjustment* tmp1 = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(data));
 		int scrolled = (int)gtk_adjustment_get_value(tmp1) == (int)gtk_adjustment_get_upper(tmp1) - (int)gtk_adjustment_get_page_size(tmp1);
 		GtkTextIter end_iter;
+		char* inserted = g_convert(string,-1,"UTF-8","ISO-8859-1",NULL,NULL,NULL);
 		gtk_text_buffer_get_end_iter(GTK_TEXT_BUFFER(buffer),&end_iter);
-		gtk_text_buffer_insert(GTK_TEXT_BUFFER(buffer),&end_iter,string,-1);
-		if(scrolled) {
+		gtk_text_buffer_insert(GTK_TEXT_BUFFER(buffer),&end_iter,inserted,-1);
+		//if(scrolled) {
 			gtk_text_view_scroll_to_iter(GTK_TEXT_VIEW(view),&end_iter,0,TRUE,0,1);
-		}
+		//}
+		free(inserted);
 		free(string);
 	}
 }
