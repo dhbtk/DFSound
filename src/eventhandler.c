@@ -11,8 +11,8 @@ EVENT* current_stateful_event = NULL;
 EVENT* default_event = NULL;
 FILE* gamelog = NULL;
 Mix_Music* music = NULL;
-char* music_path = "music/";
-char* sfx_path = "sfx/";
+char* music_path = NULL;
+char* sfx_path = NULL;
 int sfx_volume = 128;
 int music_volume = 128;
 
@@ -147,10 +147,17 @@ int load_events(char* file) {
 	char* tmp1 = strdup(file);
 	char* path = dirname(tmp1);
 	
+#ifndef WINDOWS
 	music_path = g_strdup_printf("%s/music/",path);
 	printf("Music path: %s\n",music_path);
 	sfx_path   = g_strdup_printf("%s/sfx/",path);
 	printf("SFX path: %s\n",sfx_path);
+#else
+	music_path = g_strdup_printf("%s\\music\\",path);
+	printf("Music path: %s\n",music_path);
+	sfx_path   = g_strdup_printf("%s\\sfx\\",path);
+	printf("SFX path: %s\n",sfx_path);
+#endif
 	return 0;
 }
 
