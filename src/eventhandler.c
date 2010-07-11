@@ -137,8 +137,8 @@ int load_events(char* file) {
 						curr_event->sfx = g_list_append(curr_event->sfx,(char*)xmlGetProp(child,"fileName"));
 					}
 				}
+				events = g_list_append(events,curr_event);
 			}
-			events = g_list_append(events,curr_event);
 		}
 	} else { // Unsupported
 		fprintf(stderr,"Unsupported events file.\n");

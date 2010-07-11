@@ -13,7 +13,7 @@ gboolean destroyed = FALSE;
 static void destroy(GtkWidget* window,gpointer data) {
 	destroyed = 1;
 }
-static void toggle_state(GtkWidget* button,gpointer data) {
+static void toggle_state(GtkWidget* button,GtkWidget* data) {
 	printf("%d\n",gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button)));
 	if(gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(logfile)) != NULL && gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(events_file)) != NULL) {
 		if(!gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button))) {
@@ -30,22 +30,42 @@ static void toggle_state(GtkWidget* button,gpointer data) {
 				fclose(gamelog);
 				gamelog = NULL;
 			}
+			gtk_statusbar_pop(GTK_STATUSBAR(data),0);
+			gtk_statusbar_push(GTK_STATUSBAR(data),0,"Idle.");
 		} else {
-			if(!load_events(gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(events_file)))) {
+			int worked = -1;
+			if(!(worked = load_events(gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(events_file))))) {
 				load_gamelog(gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(logfile)));
+				gtk_statusbar_pop(GTK_STATUSBAR(data),0);
+				gtk_statusbar_push(GTK_STATUSBAR(data),0,"Active.");
 			} else {
 				gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button),FALSE);
+				gtk_statusbar_pop(GTK_STATUSBAR(data),0);
+				switch(worked) {
+					case 1:
+						gtk_statusbar_push(GTK_STATUSBAR(data),0,"Events file could not be parsed. Please verify.");
+						break;
+					case 2:
+						gtk_statusbar_push(GTK_STATUSBAR(data),0,"Events file is empty!");
+						break;
+					case 3:
+						gtk_statusbar_push(GTK_STATUSBAR(data),0,"Unsupported events file.");
+						break;
+				}
 			}
 		}
 	} else {
 		gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button),FALSE);
+		gtk_statusbar_pop(GTK_STATUSBAR(data),0);
+		gtk_statusbar_push(GTK_STATUSBAR(data),0,"No files are selected!");
 	}
 }
 static void music_vol_change(GtkWidget* spinner,gpointer data) {
-	
+	music_volume = gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(spinner));
+	Mix_VolumeMusic(music_volume);
 }
 static void sfx_vol_change(GtkWidget* spinner,gpointer data) {
-	
+	sfx_volume   = gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(spinner));
 }
 static void loop_func(gpointer data) {
 	if(destroyed) return;
@@ -82,21 +102,22 @@ int main(int argc,char** argv) {
 	main_hbox = gtk_hbox_new(FALSE,0);
 	left_vbox = gtk_vbox_new(FALSE,0);
 	right_vbox = gtk_vbox_new(FALSE,0);
-	gtk_box_pack_start(GTK_BOX(main_vbox),main_hbox,TRUE,FALSE,0);
+	gtk_box_pack_start(GTK_BOX(main_vbox),main_hbox,TRUE,TRUE,0);
 	gtk_box_pack_start(GTK_BOX(main_hbox),left_vbox,FALSE,FALSE,0);
-	gtk_box_pack_start(GTK_BOX(main_hbox),right_vbox,TRUE,FALSE,0);
+	gtk_box_pack_start(GTK_BOX(main_hbox),right_vbox,TRUE,TRUE,0);
+	gtk_container_add(GTK_CONTAINER(window),main_vbox);
 	
 	// Left pane
 	gtk_box_pack_start(GTK_BOX(left_vbox),gtk_label_new("Volumes"),FALSE,FALSE,0);
 	GtkWidget* music_box = gtk_hbox_new(FALSE,0);
-	music_vol = gtk_spin_button_new_with_range(0,128,1,0);
+	music_vol = gtk_spin_button_new_with_range(0,128,1);
 	g_signal_connect(music_vol,"value-changed",G_CALLBACK(music_vol_change),NULL);
 	gtk_spin_button_set_value(GTK_SPIN_BUTTON(music_vol),128);
-	gtk_box_pack_start(GTK_BOX(music_hbox),music_vol,FALSE,FALSE,0);
-	gtk_box_pack_start(GTK_BOX(music_hbox),gtk_label_new("Music"),FALSE,FALSE,0);
+	gtk_box_pack_start(GTK_BOX(music_box),music_vol,FALSE,FALSE,0);
+	gtk_box_pack_start(GTK_BOX(music_box),gtk_label_new("Music"),FALSE,FALSE,0);
 	gtk_box_pack_start(GTK_BOX(left_vbox),music_box,FALSE,FALSE,0);
 	GtkWidget* sfx_box   = gtk_hbox_new(FALSE,0);
-	sfx_vol = gtk_spin_button_new_with_range(0,128,1,0);
+	sfx_vol = gtk_spin_button_new_with_range(0,128,1);
 	g_signal_connect(sfx_vol,"value-changed",G_CALLBACK(sfx_vol_change),NULL);
 	gtk_spin_button_set_value(GTK_SPIN_BUTTON(sfx_vol),128);
 	gtk_box_pack_start(GTK_BOX(sfx_box),sfx_vol,FALSE,FALSE,0);
@@ -109,7 +130,7 @@ int main(int argc,char** argv) {
 	gtk_file_filter_add_pattern(game_log_filter,"gamelog.txt");
 	gtk_file_filter_set_name(game_log_filter,"gamelog.txt");
 	gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(logfile),game_log_filter);
-	g_signal_connect(logfile,"file-set",G_CALLBACK(log_file_changed),NULL);
+	//g_signal_connect(logfile,"file-set",G_CALLBACK(log_file_changed),NULL);
 	gtk_box_pack_start(GTK_BOX(left_vbox),logfile,FALSE,FALSE,0);
 	
 	gtk_box_pack_start(GTK_BOX(left_vbox),gtk_label_new("Events:"),FALSE,FALSE,0);
@@ -119,8 +140,8 @@ int main(int argc,char** argv) {
 	gtk_file_filter_add_mime_type(event_file_filter,"application/xml");
 	gtk_file_filter_set_name(event_file_filter,"XML files");
 	gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(events_file),event_file_filter);
-	gtk_box_pack_start(GTK_BOX(left_vbox),events_file,FALSE,FALSE,0,0);
-	g_signal_connect(events_file,"file-set",G_CALLBACK(event_file_changed),NULL);
+	gtk_box_pack_start(GTK_BOX(left_vbox),events_file,FALSE,FALSE,0);
+	//g_signal_connect(events_file,"file-set",G_CALLBACK(event_file_changed),NULL);
 	
 	// Log viewer thing
 	log_view = gtk_text_view_new();
@@ -128,18 +149,20 @@ int main(int argc,char** argv) {
 	gtk_text_view_set_editable(GTK_TEXT_VIEW(log_view),FALSE);
 	log_scroll = gtk_scrolled_window_new(NULL,NULL);
 	gtk_container_add(GTK_CONTAINER(log_scroll),log_view);
-	gtk_box_pack_start(GTK_BOX(right_vbox),TRUE,FALSE,0);
+	gtk_box_pack_start(GTK_BOX(right_vbox),log_scroll,TRUE,TRUE,0);
 	
 	// Toggle button
 	status_button = gtk_toggle_button_new_with_label("Active");
-	gtk_box_pack_start(GTK_BOX(right_vbox),FALSE,FALSE,0);
-	g_signal_connect(status_button,"toggled",G_CALLBACK(toggle_state),NULL);
+	gtk_box_pack_start(GTK_BOX(right_vbox),status_button,FALSE,FALSE,0);
+	
 	// Status bar
 	statusbar = gtk_statusbar_new();
 	gtk_box_pack_start(GTK_BOX(main_vbox),statusbar,FALSE,FALSE,0);
 	
+	g_signal_connect(status_button,"toggled",G_CALLBACK(toggle_state),statusbar);
 	// Go!
 	gtk_widget_show_all(window);
+	gtk_statusbar_push(GTK_STATUSBAR(statusbar),0,"Idle.");
 	
 	while(!destroyed) {
 		while(gtk_events_pending()) {
