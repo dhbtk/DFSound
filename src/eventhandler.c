@@ -36,14 +36,14 @@ void event_iterator(gpointer data,gpointer user_data) {
 			printf("%s\n",path);
 			free(fname);
 			music = Mix_LoadMUS(path);
-			//Mix_VolumeMusic(music_volume);
+			Mix_VolumeMusic(music_volume);
 			Mix_PlayMusic(music,0);
 		}
 		if(event->sfx != NULL) {
 			printf("Playing sfx\n");
 			char* fname = (char*)g_list_nth_data(event->sfx,g_random_int_range(0,g_list_length(event->sfx)));
 			Mix_Chunk* sfx = Mix_LoadWAV(g_strdup_printf("%s%s",sfx_path,fname));
-			//Mix_VolumeChunk(sfx,sfx_volume);
+			Mix_VolumeChunk(sfx,sfx_volume);
 			Mix_PlayChannel(-1,sfx,0);
 		}
 	}
@@ -92,35 +92,57 @@ int load_events(char* file) {
 		fprintf(stderr,"Events file is empty!\n");
 		return 2;
 	}
-	for(node = root->xmlChildrenNode;node != NULL;node = node->next) {
-		if(!xmlStrcmp(node->name,(const xmlChar*)"event")) {
-			EVENT* curr_event    = malloc(sizeof(EVENT));
-			if(xmlGetProp(node,"default") != NULL) {
-				default_event = curr_event;
+	if(!xmlStrcmp(root->name,(const xmlChar*)"events")) { // DFSound native
+		for(node = root->xmlChildrenNode;node != NULL;node = node->next) {
+			if(!xmlStrcmp(node->name,(const xmlChar*)"event")) {
+				EVENT* curr_event    = malloc(sizeof(EVENT));
+				if(xmlGetProp(node,"default") != NULL) {
+					default_event = curr_event;
+				}
+				curr_event->pattern  = (char*)xmlGetProp(node,"pattern");
+				curr_event->music    = NULL;
+				curr_event->sfx      = NULL;
+				curr_event->stateful = 0;
+				for(child = node->xmlChildrenNode;child != NULL;child = child->next) {
+					if(!xmlStrcmp(child->name,(const xmlChar*)"music")) {
+						curr_event->music = g_list_append(curr_event->music,(char*)xmlNodeListGetString(doc,child->xmlChildrenNode,1));
+					} else if(!xmlStrcmp(child->name,(const xmlChar*)"sfx")) {
+						curr_event->sfx   = g_list_append(curr_event->sfx,(char*)xmlNodeListGetString(doc,child->xmlChildrenNode,1));
+					} else if(!xmlStrcmp(child->name,(const xmlChar*)"stateful")) {
+						curr_event->stateful = 1;
+					}
+				}
+				events = g_list_append(events,curr_event);
+			} else if(!xmlStrcmp(node->name,(const xmlChar*)"music_path")) {
+				if(xmlNodeListGetString(doc,node->xmlChildrenNode,1) != NULL) {
+					music_path = (char*)xmlNodeListGetString(doc,node->xmlChildrenNode,1);
+				}
+			} else if(!xmlStrcmp(node->name,(const xmlChar*)"sfx_path")) {
+				if(xmlNodeListGetString(doc,node->xmlChildrenNode,1) != NULL) {
+					sfx_path = (char*)xmlNodeListGetString(doc,node->xmlChildrenNode,1);
+				}
 			}
-			curr_event->pattern  = (char*)xmlGetProp(node,"pattern");
-			curr_event->music    = NULL;
-			curr_event->sfx      = NULL;
-			curr_event->stateful = 0;
-			for(child = node->xmlChildrenNode;child != NULL;child = child->next) {
-				if(!xmlStrcmp(child->name,(const xmlChar*)"music")) {
-					curr_event->music = g_list_append(curr_event->music,(char*)xmlNodeListGetString(doc,child->xmlChildrenNode,1));
-				} else if(!xmlStrcmp(child->name,(const xmlChar*)"sfx")) {
-					curr_event->sfx   = g_list_append(curr_event->sfx,(char*)xmlNodeListGetString(doc,child->xmlChildrenNode,1));
-				} else if(!xmlStrcmp(child->name,(const xmlChar*)"stateful")) {
-					curr_event->stateful = 1;
+		}
+	} else if(!xmlStrcmp(root->name,(const xmlChar*)"sounds")) { // SoundSense file
+		for(node = root->xmlChildrenNode;node != NULL;node = node->next) {
+			if(!xmlStrcmp(node->name,(const xmlChar*)"sound")) {
+				EVENT* curr_event = malloc(sizeof(EVENT));
+				// No default events for SoundSense
+				curr_event->pattern  = (char*)xmlGetProp(node,"logPattern"); // camelCase sucks
+				curr_event->music    = NULL; // No native music support
+				curr_event->sfx      = NULL;
+				curr_event->stateful = 0; // No stateful events as well
+				for(child = node->xmlChildrenNode;child != NULL;child = child->next) {
+					if(!xmlStrcmp(child->name,(const xmlChar*)"soundFile")) {
+						curr_event->sfx = g_list_append(curr_event->sfx,(char*)xmlGetProp(child,"fileName"));
+					}
 				}
 			}
 			events = g_list_append(events,curr_event);
-		} else if(!xmlStrcmp(node->name,(const xmlChar*)"music_path")) {
-			if(xmlNodeListGetString(doc,node->xmlChildrenNode,1) != NULL) {
-				music_path = (char*)xmlNodeListGetString(doc,node->xmlChildrenNode,1);
-			}
-		} else if(!xmlStrcmp(node->name,(const xmlChar*)"sfx_path")) {
-			if(xmlNodeListGetString(doc,node->xmlChildrenNode,1) != NULL) {
-				sfx_path = (char*)xmlNodeListGetString(doc,node->xmlChildrenNode,1);
-			}
 		}
+	} else { // Unsupported
+		fprintf(stderr,"Unsupported events file.\n");
+		return 3;
 	}
 	char* tmp1 = strdup(file);
 	char* path = dirname(tmp1);
