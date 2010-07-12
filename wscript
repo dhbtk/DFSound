@@ -33,7 +33,8 @@ def configure(conf):
 		Options.platform = 'win32'
 		conf.env['program_PATTERN'] = '%s.exe'
 		conf.env.append_value('CCFLAGS','-mms-bitfields')
-		conf.define('WINDOWS','')
+		conf.env.append_value ('CCFLAGS', '-mwindows')
+		conf.env.append_value('CCFLAGS','-DWINDOWS')
 		conf.env["LMINGW"] = 'mingw32'
 	
 	conf.check_cfg(package='glib-2.0',uselib_store = 'GLIB',mandatory = 1,args = '--cflags --libs')
