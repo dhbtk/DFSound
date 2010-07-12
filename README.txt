@@ -19,9 +19,9 @@ DFSound comes with a default sound pack. Creating your own packs is easy: you
 only need to know basic XML syntax and basic Regexes. DFSound can also use
 SoundSense's sound packs.
 
-+---------------------\
-| Installing/Compiling \
-+-----------------------\
++---------------------------------\
+| Installing/Compiling under Linux \
++-----------------------------------\
 
 DFSound depends on GTK+ 2.0, SDL, SDL-Mixer and libxml2. On Debian-derived
 distributions, you can install them like this:
@@ -95,6 +95,5 @@ that SDL_mixer can play, such as MP3, Ogg Vorbis, WAV files, etc.
 | Wanted stuff \
 +---------------\
 
-* A Windows build.
 * An OS X build.
 * Linux builds, both 32 and 64 bit, for the lazy.

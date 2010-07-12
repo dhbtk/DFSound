@@ -28,7 +28,9 @@ void event_iterator(gpointer data,gpointer user_data) {
 			printf("Playing music\n");
 			if(Mix_PlayingMusic()) {
 				Mix_HaltMusic();
+				fprintf(stderr,"Error code: %s",Mix_GetError());
 				Mix_FreeMusic(music);
+				fprintf(stderr,"Error code: %s",Mix_GetError());
 				music = NULL;
 			}
 			char* fname = (char*)g_list_nth_data(event->music,g_random_int_range(0,g_list_length(event->music)));
@@ -36,15 +38,20 @@ void event_iterator(gpointer data,gpointer user_data) {
 			printf("%s\n",path);
 			free(fname);
 			music = Mix_LoadMUS(path);
+			fprintf(stderr,"Error code: %s",Mix_GetError());
 			Mix_VolumeMusic(music_volume);
+			fprintf(stderr,"Error code: %s",Mix_GetError());
 			Mix_PlayMusic(music,0);
+			fprintf(stderr,"Error code: %s",Mix_GetError());
 		}
 		if(event->sfx != NULL) {
 			printf("Playing sfx\n");
 			char* fname = (char*)g_list_nth_data(event->sfx,g_random_int_range(0,g_list_length(event->sfx)));
 			Mix_Chunk* sfx = Mix_LoadWAV(g_strdup_printf("%s%s",sfx_path,fname));
 			Mix_VolumeChunk(sfx,sfx_volume);
+			fprintf(stderr,"Error code: %s",Mix_GetError());
 			Mix_PlayChannel(-1,sfx,0);
+			fprintf(stderr,"Error code: %s",Mix_GetError());
 		}
 	}
 }

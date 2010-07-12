@@ -23,7 +23,9 @@ static void toggle_state(GtkWidget* button,GtkWidget* data) {
 		if(!gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button))) {
 			if(music != NULL) {
 				Mix_HaltMusic();
+				fprintf(stderr,"Error code: %s",Mix_GetError());
 				Mix_FreeMusic(music);
+				fprintf(stderr,"Error code: %s",Mix_GetError());
 				music = NULL;
 			}
 			if(events != NULL) {
@@ -67,6 +69,7 @@ static void toggle_state(GtkWidget* button,GtkWidget* data) {
 static void music_vol_change(GtkWidget* spinner,gpointer data) {
 	music_volume = gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(spinner));
 	Mix_VolumeMusic(music_volume);
+	fprintf(stderr,"Error code: %s",Mix_GetError());
 }
 static void sfx_vol_change(GtkWidget* spinner,gpointer data) {
 	sfx_volume   = gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(spinner));
@@ -97,8 +100,12 @@ int main(int argc,char** argv) {
 	
 	gtk_init(&argc,&argv);
 	SDL_Init(SDL_INIT_AUDIO);
+#ifdef WINDOWS
+	Mix_Init(MIX_INIT_MP3|MIX_INIT_OGG);
+	fprintf(stderr,"Error code: %s",Mix_GetError());
+#endif
 	Mix_OpenAudio(44010,AUDIO_S16,2,4096);
-	
+	fprintf(stderr,"Error code: %s",Mix_GetError());
 	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	gtk_widget_set_size_request(window,640,320);
 	gtk_window_set_title(GTK_WINDOW(window),g_strdup_printf("DFSound %s",VERSION));
@@ -178,6 +185,7 @@ int main(int argc,char** argv) {
 		usleep(10);
 	}
 	Mix_CloseAudio();
+	fprintf(stderr,"Error code: %s",Mix_GetError());
 	SDL_Quit();
 	return 0;
 }
