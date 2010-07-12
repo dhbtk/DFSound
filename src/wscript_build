@@ -4,8 +4,8 @@ obj = bld(
 	features  = 'cc cprogram',
 	uselib    = 'GLIB LIBXML2 SDL GTK',
 	target    = 'dfsound',
-	lib       = ['SDL_mixer'],
-	defines   = ['VERSION="'+bld.env['VERSION']+'"'],
+	lib       = ['SDL_mixer','mingw32','SDLmain'],
+	includes  = '.. .',
 	linkflags = ['-g'],
 	ccflags   = ['-g']
 )

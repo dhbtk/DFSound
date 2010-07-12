@@ -2,6 +2,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <gtk/gtk.h>
+#include "config.h"
+#ifdef WINDOWS
+#include <windows.h>
+#endif
 #include "dfsound.h"
 #include "eventhandler.h"
 #include "SDL.h"
