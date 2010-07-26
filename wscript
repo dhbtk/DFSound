@@ -36,7 +36,12 @@ def configure(conf):
 		conf.env.append_value ('CCFLAGS', '-mwindows')
 		conf.env.append_value('CCFLAGS','-DWINDOWS')
 		conf.env["LMINGW"] = 'mingw32'
-	
+	else:
+		# No speech synth for windows
+		# No speech synth for *nix as well though
+		#conf.check(header_name='espeak/espeak_lib.h')
+		#conf.env.append_value('CCFLAGS','-DTTS')
+		pass
 	conf.check_cfg(package='glib-2.0',uselib_store = 'GLIB',mandatory = 1,args = '--cflags --libs')
 	conf.check_cfg(path='sdl-config',package='',uselib_store = 'SDL',mandatory = 1,args = '--cflags --libs')
 	conf.check_cfg(package='gtk+-2.0',uselib_store='GTK',mandatory=1,args='--cflags --libs')
